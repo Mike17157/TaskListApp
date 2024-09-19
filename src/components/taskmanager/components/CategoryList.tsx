@@ -24,26 +24,39 @@ export function CategoryList({
     <div className="w-1/4 bg-white p-4 border-r flex flex-col">
       <h2 className="text-xl font-bold mb-4 text-gray-800">Categories</h2>
       <ScrollArea className="flex-grow">
-        <ul>
+        <ul className="space-y-1">
           {categories.map((category) => (
-            <li
-              key={category}
-              className={`cursor-pointer p-2 rounded flex justify-between items-center ${
-                selectedCategory === category ? "bg-blue-100" : ""
-              }`}
-            >
-              <span onClick={() => onSelectCategory(category)} className="text-gray-700">{category}</span>
-              {isEditingCategories && (
-                <Button variant="ghost" size="sm" className="w-8 h-8 flex items-center justify-center ml-auto" onClick={() => onRemoveCategory(category)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
+            <li key={category}>
+              <Button
+                variant="row"
+                className={`justify-between ${
+                  selectedCategory === category
+                    ? "bg-gray-200 text-gray-900"
+                    : "bg-white text-gray-700"
+                }`}
+                onClick={() => onSelectCategory(category)}
+              >
+                <span>{category}</span>
+                {isEditingCategories && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveCategory(category);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </Button>
             </li>
           ))}
         </ul>
       </ScrollArea>
       <Button
-        variant="outline"
+        variant="row"
         size="sm"
         className="mt-4 self-end"
         onClick={onToggleEditCategories}

@@ -1,10 +1,11 @@
-import Image from "next/image";
-import { TaskManagerComponent } from "@/components/taskmanager/task-manager";
+"use client"
+
+import { TaskPage } from "@/components/taskmanager/taskpage";
 
 export default function Home() {
   return (
-    <div>
-      <TaskManagerComponent />
-    </div>
+    <main>
+      <TaskPage />
+    </main>
   );
 }

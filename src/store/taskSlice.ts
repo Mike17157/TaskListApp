@@ -6,7 +6,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 
 interface Task {
-  id: number
+  id: string
   text: string
   category: string
 }
@@ -20,9 +20,9 @@ interface TaskState {
 const initialState: TaskState = {
   categories: ["Work", "Personal", "Shopping"],
   tasks: [
-    { id: 1, text: "Complete project", category: "Work" },
-    { id: 2, text: "Buy groceries", category: "Shopping" },
-    { id: 3, text: "Go to the gym", category: "Personal" },
+    { id: "1", text: "Complete project", category: "Work" },
+    { id: "2", text: "Buy groceries", category: "Shopping" },
+    { id: "3", text: "Go to the gym", category: "Personal" },
   ],
   selectedCategory: "Work",
 }
@@ -33,13 +33,13 @@ const taskSlice = createSlice({
   reducers: {
     addTask: (state, action: PayloadAction<{ text: string }>) => {
       const newTask: Task = {
-        id: state.tasks.length + 1,
+        id: (state.tasks.length + 1).toString(),
         text: action.payload.text,
         category: state.selectedCategory,
       }
       state.tasks.push(newTask)
     },
-    removeTask: (state, action: PayloadAction<number>) => {
+    removeTask: (state, action: PayloadAction<string>) => {
       state.tasks = state.tasks.filter((task) => task.id !== action.payload)
     },
     addCategory: (state, action: PayloadAction<string>) => {
@@ -61,4 +61,5 @@ const taskSlice = createSlice({
 })
 
 export const { addTask, removeTask, addCategory, removeCategory, selectCategory } = taskSlice.actions
+
 export default taskSlice.reducer
