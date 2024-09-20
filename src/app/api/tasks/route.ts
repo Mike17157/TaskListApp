@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { ref, get, push, remove, query, orderByChild, equalTo, set } from 'firebase/database';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -7,33 +7,48 @@ export async function GET(request: Request) {
   const category = searchParams.get('category');
 
   try {
-    const tasksCollection = collection(db, 'tasks');
+    const tasksRef = ref(db, 'tasks');
     let tasksQuery = category
-      ? query(tasksCollection, where('category', '==', category))
-      : tasksCollection;
+      ? query(tasksRef, orderByChild('category'), equalTo(category))
+      : tasksRef;
 
-    const tasksSnapshot = await getDocs(tasksQuery);
-    const tasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await get(tasksQuery);
+    const tasksObj = snapshot.val();
+    const tasks = tasksObj
+      ? Object.entries(tasksObj).map(([id, task]) => ({
+          id,
+          ...(task as { text: string; category: string }),
+        }))
+      : [];
+
     return NextResponse.json(tasks);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch tasks' }, { status: 500 });
+    console.error('Error fetching tasks:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to fetch tasks', details: errorMessage }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
     const { text, category } = await request.json();
-    const docRef = await addDoc(collection(db, 'tasks'), { text, category });
-    return NextResponse.json({ id: docRef.id, text, category });
+    const tasksRef = ref(db, 'tasks');
+    const newTaskRef = push(tasksRef);
+    await set(newTaskRef, { text, category });
+    
+    return NextResponse.json({ id: newTaskRef.key, text, category });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to add task' }, { status: 500 });
+    console.error('Error adding task:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to add task', details: errorMessage }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
     const { id } = await request.json();
-    await deleteDoc(doc(db, 'tasks', id));
+    const taskRef = ref(db, `tasks/${id}`);
+    await remove(taskRef);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 });

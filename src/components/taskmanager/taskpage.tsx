@@ -3,11 +3,12 @@
 import React, { useEffect, useState } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import { RootState, AppDispatch } from "@/store"
-import { addTask, removeTask, addCategory, removeCategory, selectCategory } from "@/store/taskSlice"
+import { addTask, removeTask, addCategory, removeCategory, selectCategory, setTasks } from "@/store/taskSlice"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CategoryList } from "./components/CategoryList"
 import { TaskList } from "./components/TaskList"
+import { v4 as uuidv4 } from 'uuid'; // Add this import at the top
 
 interface Task {
   id: string
@@ -17,27 +18,51 @@ interface Task {
 
 export function TaskPage() {
   const dispatch: AppDispatch = useDispatch()
-  const { categories, selectedCategory } = useSelector((state: RootState) => state.task)
+  const { categories, selectedCategory, tasks } = useSelector((state: RootState) => state.task)
   const [newTask, setNewTask] = useState<string>("")
   const [newCategory, setNewCategory] = useState<string>("")
   const [isEditingCategories, setIsEditingCategories] = useState<boolean>(false)
-  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
     const fetchTasks = async () => {
       const response = await fetch(`/api/tasks?category=${selectedCategory}`);
       const data = await response.json();
-      setTasks(data);
+      dispatch(setTasks(data));
     };
     fetchTasks();
-  }, [selectedCategory]);
+  }, [selectedCategory, dispatch]);
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (newTask.trim() !== "") {
-      dispatch(addTask({ text: newTask }))
-      setNewTask("")
+      const newTaskItem = {
+        text: newTask,
+        category: selectedCategory
+      };
+
+      try {
+        const response = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newTaskItem),
+        });
+
+        if (response.ok) {
+          const addedTask = await response.json();
+          dispatch(addTask(addedTask));
+          setNewTask("");
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to add task:', errorData.error, errorData.details);
+          // You might want to show an error message to the user here
+        }
+      } catch (error) {
+        console.error('Error adding task:', error);
+        // You might want to show an error message to the user here
+      }
     }
-  }
+  };
 
   const handleAddCategory = () => {
     if (newCategory.trim() !== "") {
@@ -57,9 +82,6 @@ export function TaskPage() {
       });
 
       if (response.ok) {
-        // Remove the task from the local state
-        setTasks(tasks.filter(task => task.id !== taskId));
-        // Dispatch the removeTask action to update Redux store if needed
         dispatch(removeTask(taskId));
       } else {
         console.error('Failed to delete task');
@@ -94,7 +116,11 @@ export function TaskPage() {
               placeholder={isEditingCategories ? "Add a new category" : "Add a new task"}
               value={isEditingCategories ? newCategory : newTask}
               onChange={(e) => isEditingCategories ? setNewCategory(e.target.value) : setNewTask(e.target.value)}
-              onEnter={isEditingCategories ? handleAddCategory : handleAddTask}
+              onKeyDown={(e) => { // Changed from onKeyPress to onKeyDown
+                if (e.key === 'Enter') {
+                  isEditingCategories ? handleAddCategory() : handleAddTask();
+                }
+              }}
               isEditing={true}
               className="flex-grow"
             />

@@ -4,6 +4,7 @@
 // the state of tasks and categories across the application.
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { createAsyncThunk } from "@reduxjs/toolkit"
 
 interface Task {
   id: string
@@ -19,11 +20,7 @@ interface TaskState {
 
 const initialState: TaskState = {
   categories: ["Work", "Personal", "Shopping"],
-  tasks: [
-    { id: "1", text: "Complete project", category: "Work" },
-    { id: "2", text: "Buy groceries", category: "Shopping" },
-    { id: "3", text: "Go to the gym", category: "Personal" },
-  ],
+  tasks: [],
   selectedCategory: "Work",
 }
 
@@ -31,13 +28,11 @@ const taskSlice = createSlice({
   name: "task",
   initialState,
   reducers: {
-    addTask: (state, action: PayloadAction<{ text: string }>) => {
-      const newTask: Task = {
-        id: (state.tasks.length + 1).toString(),
-        text: action.payload.text,
-        category: state.selectedCategory,
-      }
-      state.tasks.push(newTask)
+    setTasks: (state, action: PayloadAction<Task[]>) => {
+      state.tasks = action.payload;
+    },
+    addTask: (state, action: PayloadAction<Task>) => {
+      state.tasks.push(action.payload)
     },
     removeTask: (state, action: PayloadAction<string>) => {
       state.tasks = state.tasks.filter((task) => task.id !== action.payload)
@@ -60,6 +55,28 @@ const taskSlice = createSlice({
   },
 })
 
-export const { addTask, removeTask, addCategory, removeCategory, selectCategory } = taskSlice.actions
+export const { setTasks, addTask, removeTask, addCategory, removeCategory, selectCategory } = taskSlice.actions
+
+export const fetchTasks = createAsyncThunk(
+  'tasks/fetchTasks',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/tasks');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue('An unknown error occurred');
+    }
+  }
+);
+
+// Similar changes for addTask, updateTask, and deleteTask thunks
 
 export default taskSlice.reducer

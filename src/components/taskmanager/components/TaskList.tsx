@@ -16,7 +16,7 @@ interface TaskListProps {
   onRemoveTask: (taskId: string) => void
 }
 
-export function TaskList({ tasks, selectedCategory, onRemoveTask }: TaskListProps) {
+export function TaskList({ tasks = [], selectedCategory, onRemoveTask }: TaskListProps) {
   return (
     <div className="flex-grow p-4">
       <h2 className="text-xl font-bold mb-4 text-gray-800">Tasks - {selectedCategory}</h2>
