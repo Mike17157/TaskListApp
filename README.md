@@ -9,6 +9,7 @@ This is a Next.js project that implements a Task Manager application with Fireba
 - Filter tasks by category
 - Real-time updates using Firebase Realtime Database
 - Responsive design with Tailwind CSS
+- Automatic deletion of tasks when their category is deleted
 
 ## Technologies Used
 

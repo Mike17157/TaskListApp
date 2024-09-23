@@ -3,12 +3,17 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { X, Edit, Check } from "lucide-react"
 
+interface Category {
+  id: string
+  name: string
+}
+
 interface CategoryListProps {
-  categories: string[]
-  selectedCategory: string
+  categories: Category[]
+  selectedCategory: Category | null
   isEditingCategories: boolean
-  onSelectCategory: (category: string) => void
-  onRemoveCategory: (category: string) => void
+  onSelectCategory: (categoryId: string) => void
+  onRemoveCategory: (categoryId: string) => void
   onToggleEditCategories: () => void
 }
 
@@ -22,29 +27,29 @@ export function CategoryList({
 }: CategoryListProps) {
   return (
     <div className="w-1/4 bg-white p-4 border-r flex flex-col">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">Categories</h2>
+      <h2 className="text-xl font-bold mb-2 text-black">Categories</h2>
       <ScrollArea className="flex-grow">
         <ul className="space-y-1">
           {categories.map((category) => (
-            <li key={category}>
+            <li key={category.id}>
               <Button
                 variant="row"
                 className={`justify-between ${
-                  selectedCategory === category
-                    ? "bg-gray-200 text-gray-900"
-                    : "bg-white text-gray-700"
+                  selectedCategory?.id === category.id
+                    ? "bg-gray-200 text-black"
+                    : "bg-white text-black"
                 }`}
-                onClick={() => onSelectCategory(category)}
+                onClick={() => onSelectCategory(category.id)}
               >
-                <span>{category}</span>
+                <span className="text-sm font-medium">{category.name}</span>
                 {isEditingCategories && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 text-black"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onRemoveCategory(category);
+                      onRemoveCategory(category.id);
                     }}
                   >
                     <X className="h-4 w-4" />
@@ -58,7 +63,7 @@ export function CategoryList({
       <Button
         variant="row"
         size="sm"
-        className="mt-4 self-end"
+        className="mt-4 self-end text-black"
         onClick={onToggleEditCategories}
       >
         {isEditingCategories ? <Check className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
